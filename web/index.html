@@ -1,0 +1,374 @@
+<title>Bike Geo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF0EC; --panel:#FFFFFF; --ink:#1B1F1D; --muted:#5C635F; --line:#CCD2CB; --line-soft:#E1E5DF;
+  --accent:#1F5FBF; --accent-ink:#FFFFFF; --accent-soft:#DCE6F7;
+  --ok:#2E7D4F; --ok-soft:#DCEFE3; --warn:#9A6706; --warn-soft:#F6E8C8; --fail:#B23A2E; --fail-soft:#F6DAD6;
+  --bar-track:#E1E5DF;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#171A18; --panel:#20241F; --ink:#ECEEE9; --muted:#A3AAA4; --line:#3A403B; --line-soft:#2C312D;
+  --accent:#7FA9F0; --accent-ink:#0F1A2E; --accent-soft:#233450;
+  --ok:#7CC79A; --ok-soft:#1E3A2A; --warn:#E0B24C; --warn-soft:#3F3218; --fail:#F08A7E; --fail-soft:#452220;
+  --bar-track:#2C312D;
+}}
+:root[data-theme="dark"]{
+  --bg:#171A18; --panel:#20241F; --ink:#ECEEE9; --muted:#A3AAA4; --line:#3A403B; --line-soft:#2C312D;
+  --accent:#7FA9F0; --accent-ink:#0F1A2E; --accent-soft:#233450;
+  --ok:#7CC79A; --ok-soft:#1E3A2A; --warn:#E0B24C; --warn-soft:#3F3218; --fail:#F08A7E; --fail-soft:#452220;
+  --bar-track:#2C312D;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:Barlow,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.45;padding-inline:20px;padding-block:24px 48px}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;text-wrap:balance;margin:0}
+.mono{font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+header{max-width:1180px;margin:0 auto 20px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px}
+header h1{font-size:34px;font-weight:700;letter-spacing:.01em}
+header p{margin:0;color:var(--muted);max-width:60ch}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);padding:18px}
+form{display:grid;gap:14px}
+.f{display:grid;gap:5px}
+.f label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.f small{color:var(--muted);font-size:12px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);padding:8px 10px;width:100%;border-radius:2px}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:7px 4px;font-size:13px;cursor:pointer;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;border-right:1px solid var(--line)}
+.seg label:last-child{border-right:0}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
+.targets{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}
+.targets h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted);margin:0}
+.kv dd{margin:0;text-align:right}
+.note{color:var(--muted);font-size:12px;margin-top:10px}
+.results{display:grid;gap:12px}
+.rhead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.rhead h2{font-size:24px;font-weight:600}
+.rhead span{color:var(--muted);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);display:grid;grid-template-columns:76px minmax(0,1fr);gap:0}
+.card.top{border-color:var(--accent)}
+.score{display:grid;place-content:center;text-align:center;border-right:1px solid var(--line-soft);padding:14px 6px}
+.score b{font-family:"Barlow Condensed",Arial,sans-serif;font-size:34px;font-weight:700;line-height:1;display:block}
+.score i{font-style:normal;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.score.s-ok b{color:var(--ok)}.score.s-warn b{color:var(--warn)}.score.s-fail b{color:var(--fail)}
+.body{padding:12px 14px;display:grid;gap:8px}
+.title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.title h3{font-size:20px;font-weight:600}
+.title .sz{font-size:13px;color:var(--muted)}
+.meter{height:4px;background:var(--bar-track);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.specs{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px}
+.specs span{color:var(--muted)}
+.notes{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.notes li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:13px}
+.pill{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:2px 6px;border-radius:2px;margin-top:2px}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-fail{background:var(--fail-soft);color:var(--fail)}
+.draw{background:var(--panel);border:1px solid var(--line);padding:14px}
+.draw h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.draw p{margin:0 0 8px;color:var(--muted);font-size:13px}
+svg{width:100%;height:auto;max-height:520px;display:block;max-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.empty{color:var(--muted);padding:20px;border:1px dashed var(--line)}
+@media (prefers-reduced-motion:no-preference){.meter i{transition:width .3s ease}}
+.views{display:flex;gap:0;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.views a{padding:6px 14px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;border-right:1px solid var(--line)}
+.views a:last-child{border-right:0}
+.views a.on{background:var(--accent);color:var(--accent-ink)}
+.views a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.fitting{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.fitting{grid-template-columns:1fr}}
+.steps{background:var(--panel);border:1px solid var(--line);padding:8px;display:grid;gap:2px;position:sticky;top:12px}
+.steps button{all:unset;display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:7px 8px;cursor:pointer;font-size:14px;border-radius:2px}
+.steps button:hover{background:var(--bg)}
+.steps button:focus-visible{outline:2px solid var(--accent)}
+.steps button.on{background:var(--accent-soft);color:var(--ink)}
+.steps button .n{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+.steps button .st{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.steps button .st.done{background:var(--ok)}
+.steps button .st.part{background:var(--warn)}
+.step{background:var(--panel);border:1px solid var(--line);padding:18px 20px;display:grid;gap:16px}
+.step h2{font-size:26px;font-weight:600}
+.step .lead{color:var(--muted);margin:0;max-width:70ch}
+.step h3{font-size:17px;font-weight:600;margin-top:4px}
+.step p{margin:0;max-width:72ch}
+.step ul,.step ol{margin:0;padding-left:20px;max-width:72ch;display:grid;gap:4px}
+.chk{display:grid;gap:6px;margin:0;padding:0;list-style:none;max-width:72ch}
+.chk li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.chk input{width:16px;height:16px;margin-top:3px}
+.chk small{color:var(--muted);display:block}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.ind{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:8px 16px;padding:12px 0;border-top:1px solid var(--line-soft);align-items:start}
+.ind:first-child{border-top:0}
+.ind h4{margin:0;font-size:15px;font-weight:600;font-family:Barlow,sans-serif}
+.ind .how{color:var(--muted);font-size:13px;margin-top:3px}
+.ind .cav{color:var(--muted);font-size:12px;margin-top:4px;font-style:italic}
+.ind .ctl{display:grid;gap:6px}
+@media (max-width:600px){.ind{grid-template-columns:1fr}}
+.verdict{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:3px 7px;border-radius:2px;background:var(--bg);color:var(--muted)}
+.v-high,.v-forward,.v-far-or-low,.v-low{background:var(--warn-soft);color:var(--warn)}
+.v-inconclusive{background:var(--bg);color:var(--muted)}
+.tally{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:520px}
+.tally div{border:1px solid var(--line);padding:8px 10px;text-align:center}
+.tally b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:28px;line-height:1}
+.tally span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;max-width:72ch}
+.callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+.callout.ok{border-color:var(--ok);background:var(--ok-soft)}
+.callout.fail{border-color:var(--fail);background:var(--fail-soft)}
+.callout b{font-weight:600}
+table.t{border-collapse:collapse;font-size:13px;width:100%}
+table.t th,table.t td{border-bottom:1px solid var(--line-soft);padding:6px 8px;text-align:left;vertical-align:top}
+table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+table.t tr.hit td{background:var(--accent-soft)}
+.tw{overflow-x:auto}
+.log{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.log li{display:grid;grid-template-columns:auto auto 1fr;gap:12px;align-items:baseline;font-size:13px;border-bottom:1px solid var(--line-soft);padding:6px 0}
+button.btn{font:inherit;font-weight:600;background:var(--accent);color:var(--accent-ink);border:0;padding:8px 14px;border-radius:2px;cursor:pointer}
+button.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.save{font-size:12px;color:var(--muted)}
+textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);padding:8px 10px;width:100%;border-radius:2px;min-height:70px}
+.rank li{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.rank{list-style:none;margin:0;padding:0}
+.rank b{font-family:"Barlow Condensed",sans-serif;font-size:22px}
+</style>
+
+<header>
+  <h1>Bike Geo</h1>
+  <nav class="views" aria-label="Ansicht">
+    <a href="#rahmen" data-view="rahmen" class="on">Rahmen</a>
+    <a href="#fitting" data-view="fitting">Fitting</a>
+  </nav>
+  <p id="viewlead">Welcher Rahmen passt zu welcher Person. Faustregel-Modell, keine Fitting-Messung. Rahmendaten sind Beispielwerte.</p>
+</header>
+
+<div id="view-fitting" class="fitting" hidden></div>
+
+<div id="view-rahmen" class="wrap">
+  <section class="panel">
+    <form id="form">
+      <div class="row2">
+        <div class="f"><label for="height">Körpergröße</label><input class="mono" id="height" type="number" min="1300" max="2200" step="5" value="1780"><small>mm, ohne Schuhe</small></div>
+        <div class="f"><label for="inseam">Schrittlänge</label><input class="mono" id="inseam" type="number" min="600" max="1100" step="5" value="840"><small>mm, Boden bis Schritt</small></div>
+      </div>
+      <div class="row2">
+        <div class="f"><label for="torso">Rumpf</label><input class="mono" id="torso" type="number" min="400" max="800" step="5" placeholder="schätzen"><small>mm, optional</small></div>
+        <div class="f"><label for="arm">Arm</label><input class="mono" id="arm" type="number" min="450" max="900" step="5" placeholder="schätzen"><small>mm, optional</small></div>
+      </div>
+      <div class="f"><label for="discipline">Disziplin</label>
+        <select id="discipline">
+          <option value="road-race">Rennrad, Race</option>
+          <option value="road-endurance">Rennrad, Endurance</option>
+          <option value="gravel">Gravel</option>
+          <option value="mtb-xc">MTB Cross-Country</option>
+          <option value="mtb-trail">MTB Trail</option>
+          <option value="mtb-enduro">MTB Enduro</option>
+        </select></div>
+      <div class="f"><label>Haltung</label>
+        <div class="seg">
+          <input type="radio" name="posture" id="p-agg" value="aggressive"><label for="p-agg">Sportlich</label>
+          <input type="radio" name="posture" id="p-bal" value="balanced" checked><label for="p-bal">Ausgewogen</label>
+          <input type="radio" name="posture" id="p-com" value="comfort"><label for="p-com">Komfort</label>
+        </div></div>
+      <div class="f"><label>Beweglichkeit</label>
+        <div class="seg">
+          <input type="radio" name="flex" id="x-low" value="low"><label for="x-low">Gering</label>
+          <input type="radio" name="flex" id="x-med" value="medium" checked><label for="x-med">Mittel</label>
+          <input type="radio" name="flex" id="x-high" value="high"><label for="x-high">Hoch</label>
+        </div></div>
+    </form>
+    <div class="targets">
+      <h3>Zielposition, bezogen aufs Tretlager</h3>
+      <dl class="kv mono" id="targets"></dl>
+      <p class="note" id="estnote"></p>
+    </div>
+  </section>
+
+  <section class="results">
+    <div class="rhead"><h2>Rangliste</h2><span id="count"></span></div>
+    <div id="draw" class="draw"></div>
+    <div id="list"></div>
+  </section>
+</div>
+
+<script type="module">
+import { rankFrames, computeFitTargets } from './bikegeo.js';
+const FRAMES = /*__FRAMES__*/[];
+window.BIKEGEO_FRAMES = FRAMES;
+const $ = (id) => document.getElementById(id);
+const n = (v) => Math.round(v);
+const DISC = {'road-race':'Rennrad Race','road-endurance':'Rennrad Endurance',gravel:'Gravel','mtb-xc':'MTB XC','mtb-trail':'MTB Trail','mtb-enduro':'MTB Enduro'};
+
+function readRider(){
+  const m = { heightMm: +$('height').value, inseamMm: +$('inseam').value };
+  if ($('torso').value) m.torsoMm = +$('torso').value;
+  if ($('arm').value) m.armMm = +$('arm').value;
+  return {
+    measurements: m,
+    posture: document.querySelector('input[name=posture]:checked').value,
+    flexibility: document.querySelector('input[name=flex]:checked').value,
+    discipline: $('discipline').value,
+  };
+}
+
+function sevOf(m){ if (m.score === 0 || m.notes.some(x=>x.severity==='fail')) return 'fail'; if (m.score < 70 || m.notes.some(x=>x.severity==='warn')) return 'warn'; return 'ok'; }
+
+const RAD = Math.PI/180;
+const WHEEL_R = {'700c':340,'650b':335,'29':370,'27.5':355,'26':330};
+function circleMeet(a, b, ra, rb, upper){
+  // Schnittpunkt zweier Kreise um a (Radius ra) und b (Radius rb); upper wählt die Seite links der Richtung a→b.
+  const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy);
+  if (d===0) return null;
+  if (d > ra+rb) return { x:a.x+dx*ra/d, y:a.y+dy*ra/d, stretched:true };
+  if (d < Math.abs(ra-rb)) return null;
+  const k=(d*d+ra*ra-rb*rb)/(2*d), h=Math.sqrt(Math.max(0,ra*ra-k*k));
+  const ux=dx/d, uy=dy/d, sgn = upper?1:-1;
+  return { x:a.x+ux*k - sgn*uy*h, y:a.y+uy*k + sgn*ux*h };
+}
+function drawing(t, m){
+  const f=m.frame, mtb=f.discipline.startsWith('mtb'), drop=f.bbDropMm ?? (mtb?35:70);
+  const HTA=f.headTubeAngleDeg, STA=f.seatTubeAngleDeg, R=WHEEL_R[f.wheelSize] ?? (mtb?370:340);
+  const sh=t.saddleHeightMm;
+  // Rahmenpunkte in mm, Ursprung Tretlager, y nach oben.
+  const bb={x:0,y:0};
+  const ht={x:f.reachMm,y:f.stackMm};
+  const hb={x:ht.x+f.headTubeLengthMm*Math.cos(HTA*RAD), y:ht.y-f.headTubeLengthMm*Math.sin(HTA*RAD)};
+  const cs=f.chainstayMm ?? (mtb?435:410);
+  const ra={x:-Math.sqrt(Math.max(0,cs*cs-drop*drop)), y:drop};
+  let fa;
+  if (f.wheelbaseMm) fa={x:ra.x+f.wheelbaseMm,y:drop};
+  else { const off=f.forkOffsetMm ?? 45; fa={x:hb.x+(hb.y-drop)/Math.tan(HTA*RAD)+off/Math.sin(HTA*RAD), y:drop}; }
+  const crown={x:hb.x+35*Math.cos(HTA*RAD), y:hb.y-35*Math.sin(HTA*RAD)};
+  const stL=f.seatTubeMm ?? sh*0.7;
+  const st={x:-stL*Math.cos(STA*RAD), y:stL*Math.sin(STA*RAD)};
+  const sof={x:-sh*Math.cos(STA*RAD), y:sh*Math.sin(STA*RAD)};   // Sattel auf der Sitzrohrachse
+  const sad=t.saddle;                                             // Sattelmitte nach Versatz
+  const spc=m.cockpit.spacersMm+25;
+  const clamp={x:ht.x-spc*Math.cos(HTA*RAD), y:ht.y+spc*Math.sin(HTA*RAD)};
+  const bar=m.resultingBar, tgt=t.bar;
+  const crank=172.5, pf={x:crank,y:0}, pr={x:-crank,y:0};
+  // Fahrer aus den Körpermaßen.
+  const mu=t.measurementsUsed;
+  const hip={x:sad.x-10,y:sad.y+90};
+  const trunk=Math.max(200,mu.torsoMm-90), armEff=mu.armMm*0.92;
+  const hood = mtb ? {x:bar.x+5,y:bar.y+10} : {x:bar.x+85,y:bar.y+12};   // Griffpunkt: STI-Hoods bzw. MTB-Griff
+  const sho=circleMeet(hip,hood,trunk,armEff,true) ?? {x:hip.x+trunk*0.7,y:hip.y+trunk*0.7};
+  const elb=circleMeet(sho,hood,armEff/2+8,armEff/2+8,false) ?? {x:(sho.x+hood.x)/2,y:(sho.y+hood.y)/2};
+  const tdx=sho.x-hip.x, tdy=sho.y-hip.y, tl=Math.hypot(tdx,tdy)||1;
+  const neckA=Math.atan2(tdy,tdx)+22*RAD;
+  const neck={x:sho.x+70*Math.cos(neckA), y:sho.y+70*Math.sin(neckA)};
+  const head={x:sho.x+165*Math.cos(neckA), y:sho.y+165*Math.sin(neckA)};
+  const thigh=mu.heightMm*0.245, shank=mu.heightMm*0.246;
+  const ankle=(ped)=>({x:ped.x-35,y:ped.y+85});
+  const af=ankle(pf), ar=ankle(pr);
+  const kf=circleMeet(hip,af,thigh,shank,true) ?? af, kr=circleMeet(hip,ar,thigh,shank,true) ?? ar;
+  const foot=(ank,ped,cls)=>poly([{x:ank.x-40,y:ank.y-70},{x:ped.x+5,y:ped.y+12},{x:ped.x+80,y:ped.y+8}],cls,20)+seg(ank,{x:ped.x+5,y:ped.y+12},cls,16);
+  // Bildgrenzen.
+  const minX=ra.x-R-40, maxX=fa.x+R+40, minY=drop-R-30, maxY=Math.max(head.y+130,sad.y+160)+20;
+  const W=maxX-minX, H=maxY-minY;
+  const P=(p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+  const seg=(a,b,cls,w)=>`<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${cls}" stroke-width="${w}" stroke-linecap="round"/>`;
+  const poly=(pts,cls,w)=>`<polyline points="${pts.map(P).join(' ')}" fill="none" stroke="${cls}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const dot=(p,cls,r)=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${cls}"/>`;
+  const ring=(p,cls,r,w)=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="none" stroke="${cls}" stroke-width="${w}"/>`;
+  const X=(x)=>(x-minX).toFixed(1), Y=(y)=>(maxY-y).toFixed(1);
+  const label=(p,txt,dx,dy,anchor='start')=>`<text x="${(+X(p.x)+dx).toFixed(1)}" y="${(+Y(p.y)+dy).toFixed(1)}" font-size="34" font-family="JetBrains Mono,monospace" fill="var(--muted)" paint-order="stroke" stroke="var(--panel)" stroke-width="10" stroke-linejoin="round" text-anchor="${anchor}">${txt}</text>`;
+  const barShape = mtb
+    ? seg({x:bar.x-20,y:bar.y},{x:bar.x+25,y:bar.y+10},'var(--ink)',12)
+    : `<path d="M ${P(bar)} c 70,0 95,-15 95,-70 c 0,-70 -35,-95 -75,-95" fill="none" stroke="var(--ink)" stroke-width="12" stroke-linecap="round"/>` + seg({x:bar.x+60,y:bar.y+2},{x:bar.x+98,y:bar.y+20},'var(--ink)',22);
+  return `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Seitenansicht: Rahmen mit Fahrer">
+  <g transform="translate(${(-minX).toFixed(1)},${maxY.toFixed(1)}) scale(1,-1)">
+    <line x1="${(ra.x-R-20).toFixed(1)}" y1="${(drop-R).toFixed(1)}" x2="${(fa.x+R+20).toFixed(1)}" y2="${(drop-R).toFixed(1)}" stroke="var(--line)" stroke-width="3"/>
+    ${ring(ra,'var(--line)',R,10)} ${ring(ra,'var(--line-soft)',R-38,4)} ${ring(fa,'var(--line)',R,10)} ${ring(fa,'var(--line-soft)',R-38,4)}
+    ${seg(bb,{x:0,y:ht.y},'var(--accent)',2)} ${seg({x:0,y:ht.y},ht,'var(--accent)',2)}
+    ${seg(bb,hb,'var(--ink)',14)} ${seg(bb,st,'var(--ink)',14)} ${seg(st,ht,'var(--ink)',14)} ${seg(ht,hb,'var(--ink)',16)}
+    ${seg(bb,ra,'var(--ink)',10)} ${seg(st,ra,'var(--ink)',10)}
+    ${poly([hb,crown,fa],'var(--ink)',10)}
+    ${seg(st,sof,'var(--ink)',9)} ${seg(sof,{x:sad.x,y:sad.y-12},'var(--ink)',9)}
+    ${seg({x:sad.x-135,y:sad.y},{x:sad.x+120,y:sad.y},'var(--ink)',14)}
+    ${seg(ht,clamp,'var(--ink)',12)} ${seg(clamp,bar,'var(--ink)',10)} ${barShape}
+    ${ring(bb,'var(--ink)',85,5)} ${seg(pr,pf,'var(--ink)',9)} ${seg({x:pf.x-35,y:0},{x:pf.x+35,y:0},'var(--ink)',8)} ${seg({x:pr.x-35,y:0},{x:pr.x+35,y:0},'var(--ink)',8)}
+    ${poly([hip,kr,ar],'var(--accent-soft)',22)} ${foot(ar,pr,'var(--accent-soft)')}
+    ${poly([hip,kf,af],'var(--accent)',22)} ${foot(af,pf,'var(--accent)')}
+    ${poly([hip,sho,elb,hood],'var(--accent)',22)} ${dot(hood,'var(--accent)',20)}
+    ${seg(sho,neck,'var(--accent)',20)} ${dot(head,'var(--accent)',100)}
+    ${dot(hip,'var(--panel)',12)} ${dot(sho,'var(--panel)',12)} ${dot(kf,'var(--panel)',12)} ${dot(af,'var(--panel)',10)} ${dot(elb,'var(--panel)',10)}
+    ${ring(tgt,'var(--accent)',22,8)} ${dot(bar,'var(--warn)',16)}
+  </g>
+  ${label({x:0,y:ht.y*0.42},'Stack '+f.stackMm,-14,12,'end')}
+  ${label({x:ht.x/2,y:ht.y},'Reach '+f.reachMm,0,-14,'middle')}
+  ${label(sad,'Sattel '+n(sad.x)+' / '+n(sad.y),-70,-70,'end')}
+  ${label(bar,'Lenker Ziel '+n(tgt.x)+' / '+n(tgt.y),60,-60)} ${label(bar,'Ist '+n(bar.x)+' / '+n(bar.y)+' · Vorbau '+m.cockpit.stemLengthMm+' mm',60,-22)}
+  ${label(bb,'Tretlager',0,130,'middle')}
+  </svg>`;
+}
+
+function render(){
+  const rider = readRider();
+  if (!(rider.measurements.heightMm > 0 && rider.measurements.inseamMm > 0)) return;
+  const t = computeFitTargets(rider);
+  const est = [];
+  if (rider.measurements.torsoMm === undefined) est.push('Rumpf '+t.measurementsUsed.torsoMm+' mm');
+  if (rider.measurements.armMm === undefined) est.push('Arm '+t.measurementsUsed.armMm+' mm');
+  $('targets').innerHTML = [
+    ['Sattelhöhe', n(t.saddleHeightMm)+' mm'],
+    ['Sattel x / y', n(t.saddle.x)+' / '+n(t.saddle.y)],
+    ['Lenker x / y', n(t.bar.x)+' / '+n(t.bar.y)],
+    ['Überhöhung', n(t.saddleToBarDropMm)+' mm'],
+    ['Sattel → Lenker', n(t.saddleToBarReachMm)+' mm'],
+  ].map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('estnote').textContent = est.length ? 'Geschätzt aus der Körpergröße: '+est.join(', ')+'. Gemessene Werte sind genauer.' : 'Alle Maße gemessen.';
+
+  const ranked = rankFrames(rider, FRAMES);
+  $('count').textContent = ranked.length+' Rahmen, '+DISC[rider.discipline];
+  if (!ranked.length){ $('list').innerHTML = '<div class="empty">Keine Beispielrahmen für diese Disziplin.</div>'; $('draw').innerHTML=''; return; }
+  const best = ranked[0];
+  $('draw').innerHTML = `<h3>Seitenansicht: ${best.frame.model} ${best.frame.size}</h3>
+    <p>Maßstäblich in mm aus den Geometriedaten gezeichnet. Fahrerfigur aus Körpergröße, Rumpf und Arm; Hände auf den Hoods, Füße auf den Pedalen bei waagerechter Kurbel, Gelenkwinkel daraus berechnet. Cockpit: ${best.cockpit.stemLengthMm} mm Vorbau, ${best.cockpit.spacersMm} mm Spacer.</p>
+    ${drawing(t,best)}
+    <div class="legend"><span><i style="background:var(--ink)"></i>Rahmen</span><span><i style="background:var(--accent)"></i>Fahrer</span><span><i style="background:transparent;border:2px solid var(--accent)"></i>Ziel-Lenkerposition</span><span><i style="background:var(--warn)"></i>Erreichte Lenkerposition</span><span><i style="background:var(--accent);height:2px;border-radius:0;width:14px;vertical-align:2px"></i>Stack / Reach</span></div>`;
+  $('list').innerHTML = ranked.map((m,i)=>{
+    const s = sevOf(m), c = m.cockpit;
+    return `<article class="card ${i===0?'top':''}">
+      <div class="score s-${s}"><b class="mono">${m.score}</b><i>Score</i></div>
+      <div class="body">
+        <div class="title"><h3>${m.frame.model} ${m.frame.size}</h3><span class="sz">Stack ${m.frame.stackMm} · Reach ${m.frame.reachMm} · ${m.frame.seatTubeAngleDeg}° Sitzwinkel</span></div>
+        <div class="meter"><i style="width:${m.score}%"></i></div>
+        <div class="specs mono">
+          <span>Vorbau</span>${c.stemLengthMm} mm / ${c.stemAngleDeg}°
+          <span>Spacer</span>${c.spacersMm} mm
+          <span>Lenker Δx/Δy</span>${n(m.barDelta.x)} / ${n(m.barDelta.y)} mm
+          <span>Sattelversatz</span>${m.saddleSetbackMm} mm
+          ${m.exposedSeatpostMm!==undefined?'<span>Stützenauszug</span>'+m.exposedSeatpostMm+' mm':''}
+        </div>
+        <ul class="notes">${m.notes.map(x=>`<li><span class="pill p-${x.severity}">${x.severity}</span><span>${x.message}</span></li>`).join('')}</ul>
+      </div></article>`;
+  }).join('');
+}
+$('form').addEventListener('input', render);
+render();
+</script>
+<script type="module">
+import { mountFitting } from './fitting.js';
+const leads = { rahmen: 'Welcher Rahmen passt zu welcher Person. Faustregel-Modell, keine Fitting-Messung. Rahmendaten sind Beispielwerte.', fitting: 'Dynamisches Bikefitting auf der Rolle, Schritt für Schritt: Cleats, Kurbel, Sattelhöhe, Sattel vor/zurück, Lenker, Aufzeichnung. Eingaben werden gespeichert.' };
+function showView(v){
+  document.getElementById('view-rahmen').hidden = v !== 'rahmen';
+  document.getElementById('view-fitting').hidden = v !== 'fitting';
+  document.querySelectorAll('.views a').forEach(a => a.classList.toggle('on', a.dataset.view === v));
+  document.getElementById('viewlead').textContent = leads[v];
+}
+document.querySelectorAll('.views a').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); history.replaceState(null, '', '#' + a.dataset.view); showView(a.dataset.view); }));
+const initial = location.hash === '#fitting' ? 'fitting' : 'rahmen';
+showView(initial);
+mountFitting(document.getElementById('view-fitting'));
+</script>

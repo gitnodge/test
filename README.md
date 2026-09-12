@@ -6,19 +6,28 @@ Eingabe sind Körpermaße, Beweglichkeit, gewünschte Sitzhaltung und Disziplin.
 von Rahmen mit Score, dem dafür nötigen Cockpit (Vorbaulänge, Vorbauwinkel, Spacer), dem nötigen
 Sattelversatz und einer Begründung in Klartext.
 
+Zweiter Teil ist ein Bikefitting-Protokoll: das dynamische Fitting auf der Rolle, Schritt für Schritt
+(Werkzeug, Baseline, Cleats, Kurbellänge, Beinmaße und Rechner, Indikatoren für Sattelhöhe, Sattel
+vor/zurück und Lenker, Iteration, Fehlerbilder, Aufzeichnung, Straßentest), mit Bewertung der Eingaben
+gegen die Schwellwerte der Methodik.
+
 ## Status
 
-Frühes Fundament, keine App. Vorhanden ist die Kernlogik als TypeScript-Bibliothek ohne Oberfläche und
-ohne Rahmendatenbank. Die enthaltenen Rahmendaten sind erfundene, aber plausible Beispielwerte, keine
-Herstellerdaten.
+Kernlogik als TypeScript-Bibliothek plus Web-Oberfläche ohne Backend. Keine Rahmendatenbank: Die
+enthaltenen Rahmendaten sind erfundene, aber plausible Beispielwerte, keine Herstellerdaten.
 
 ## Schnellstart
 
 ```sh
 npm install
-npm test        # 27 Unit-Tests
-npm run demo    # Rangliste für eine Beispielperson (1,78 m, 84 cm Schrittlänge, Rennrad)
+npm test          # Unit-Tests
+npm run demo      # Rangliste für eine Beispielperson (1,78 m, 84 cm Schrittlänge, Rennrad)
+npm run build:web # Web-Oberfläche nach web/dist (statisch, im Browser öffnen oder als Artifact veröffentlichen)
 ```
+
+Die Oberfläche hat zwei Ansichten: **Rahmen** (Matching mit maßstäblicher Zeichnung von Rahmen und
+Fahrer) und **Fitting** (das Protokoll). Fitting-Eingaben werden im Browser gespeichert und, wenn die
+Seite als Artifact mit Datenbank läuft, zusätzlich dort.
 
 ## Wie das Matching funktioniert
 
@@ -39,6 +48,22 @@ Alle Positionen beziehen sich auf die Tretlagermitte (x nach vorn, y nach oben, 
 3. **Score** 0 bis 100 aus gewichteten Strafpunkten; harte Ausschlüsse geben 0.
 
 Alle Koeffizienten stehen in `src/constants.ts`, mit Erklärung.
+
+## Fitting-Protokoll
+
+Methodik: dynamisches Bikefitting nach BikeDynamics (Michael Veal, „DIY Dynamic Bike Fitting“). Der
+Guide ist urheberrechtlich geschützt; hier stehen keine Textpassagen daraus, sondern die Methodik in
+eigener Formulierung, die Schwellwerte, Formeln und Tabellen als Fakten. Module unter `src/fitting/`:
+
+| Modul | Inhalt |
+|---|---|
+| `calculators.ts` | Sattelhöhen-Vorhersage aus Schrittlänge + Trochanterhöhe (4,4808·x − 43,3, R² 0,95) mit Rückfall auf Einzelmaße, Vergleich Ist/Soll (20-mm-Alarm), Körperproportionen (Schrittlänge/Größe, Spannweite), Cleat- und Vor/zurück-Äquivalenz, Belastungsziele, Torsowinkel-Ziel |
+| `sizing.ts` | Rahmengrößentabelle 48 … 62, Kurbellängentabelle 162,5 … 177,5, Lenkerbreite aus Schulterbreite |
+| `indicators.ts` | 10 beobachtbare Sattelhöhen-Indikatoren (Kniewinkel max/min, Sprunggelenk oben/unten, Kniemarke, Symmetrie, Leistung Hoods/Unterlenker, Hüftstabilität, Oberkörper, Becken), 4 Vor/zurück-Indikatoren (KOPS, Hüftmarke, Balance, Handgewicht), 7 Lenker-Indikatoren (4 für Höhe und Reach, 3 nur Höhe), Handgelenk-Checks, Bilanzen |
+| `iteration.ts` | Erster Grobschritt, Grobabstimmung (besser/schlechter/unklar), Feinabstimmung mit 2-mm-Pad, Sweet-Spot-Kriterium, Klebeband-Markierung |
+| `errorStates.ts` | Fehlerbilder: Streben am Anschlag, kein Sweet Spot, Beinlängendifferenz, Kurbel zu lang, Hoods nicht erreichbar (Rad zu groß oder Proportionen) |
+| `record.ts` | Aufzeichnung A … H mit Übertragbarkeit; Umrechnung in Zielpositionen fürs Rahmen-Matching |
+| `protocol.ts` | Werkzeugliste, Marker, Cleat-Regeln, Ablaufschritte, Straßen-Checkliste, Kernaussagen |
 
 ## Was noch nicht stimmt
 
@@ -61,14 +86,22 @@ Das ist die ehrliche Liste, nicht die Marketingversion.
 - **Es gibt keine Rahmendaten.** Herstellergeometrien sind nicht frei als Datensatz verfügbar. Sie müssen
   manuell erfasst oder gescrapt werden, und Scraping ist rechtlich und wartungstechnisch heikel. Das ist für
   eine nutzbare App der größere Aufwand als die Logik.
-- **Keine Oberfläche, keine Persistenz.** Nur Bibliothek und Demo-Skript.
+- **Ein Protokoll ersetzt keinen Beobachter.** Die App bewertet, was jemand beobachtet und eingibt.
+  Kniewinkel, Fußhaltung, Hüftkippen und Kniemarken-Verhalten muss eine zweite Person sehen oder ein
+  Video liefern; die App misst nichts. Die Schwellwerte gelten für Rennräder; die Methodik ist auf andere
+  Räder übertragbar, die Zahlen nicht eins zu eins.
+- **Die Bilanzen sind grobe Mehrheitsentscheide.** Zwei Stimmen Vorsprung entscheiden. Die Methodik
+  selbst sagt, dass die Indikatoren mehrdeutig und teils widersprüchlich sind; die App macht daraus keine
+  Präzision, die nicht da ist.
+- **Web-Oberfläche ohne Backend.** Speicherung im Browser des Geräts, optional in der Artifact-Datenbank.
+  Kein Export außer Kopieren des JSON.
 
 ## Nächste sinnvolle Schritte
 
 1. Rahmendaten: Format ist definiert (`FrameGeometry` in `src/types.ts`); Quelle klären.
 2. Kalibrierung: mindestens 20 bis 30 reale Person-plus-passendes-Rad-Datensätze sammeln und die
    Koeffizienten in `src/constants.ts` daran prüfen.
-3. Oberfläche: Formular für Maße, Ausgabe der Rangliste mit Begründungen.
+3. Videoanalyse: Gelenkwinkel aus Video statt Handeingabe, dann wären die Indikatoren messbar statt geschätzt.
 
 ## Projektstruktur
 
@@ -81,7 +114,12 @@ src/
   cockpit.ts       Lenkerposition aus Rahmen + Vorbau + Spacer, Cockpit-Suche
   fit.ts           Person → Zielpositionen
   match.ts         Rahmen bewerten und ranken
+  fitting/         Bikefitting-Protokoll (Rechner, Indikatoren, Iteration, Fehlerbilder, Aufzeichnung)
   data/            Beispielrahmen (erfundene Werte)
   demo.ts          Konsolen-Demo
+web/
+  index.html       Oberfläche: Rahmen-Matching mit Zeichnung, Ansichtswechsel
+  fitting.js       Oberfläche: Fitting-Protokoll
+scripts/build-web.mjs  Bündelt die Bibliothek und baut web/dist
 test/              Vitest-Tests
 ```
