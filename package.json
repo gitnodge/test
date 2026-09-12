@@ -1,0 +1,23 @@
+{
+  "name": "bike-geo",
+  "version": "0.1.0",
+  "description": "Bike Geo – findet heraus, welcher Fahrradrahmen mit welcher Geometrie zu welcher Person passt.",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "demo": "tsx src/demo.ts"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

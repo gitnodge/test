@@ -1,0 +1,74 @@
+[
+  {
+    "id": "race-52", "brand": "Beispiel", "model": "Race", "size": "52", "discipline": "road-race",
+    "stackMm": 521, "reachMm": 378, "headTubeAngleDeg": 72.5, "seatTubeAngleDeg": 74.0,
+    "headTubeLengthMm": 115, "seatTubeMm": 470, "topTubeEffectiveMm": 532, "chainstayMm": 410,
+    "wheelbaseMm": 975, "bbDropMm": 72, "standoverMm": 745, "wheelSize": "700c"
+  },
+  {
+    "id": "race-54", "brand": "Beispiel", "model": "Race", "size": "54", "discipline": "road-race",
+    "stackMm": 542, "reachMm": 384, "headTubeAngleDeg": 73.0, "seatTubeAngleDeg": 73.5,
+    "headTubeLengthMm": 135, "seatTubeMm": 490, "topTubeEffectiveMm": 545, "chainstayMm": 410,
+    "wheelbaseMm": 980, "bbDropMm": 72, "standoverMm": 765, "wheelSize": "700c"
+  },
+  {
+    "id": "race-56", "brand": "Beispiel", "model": "Race", "size": "56", "discipline": "road-race",
+    "stackMm": 565, "reachMm": 392, "headTubeAngleDeg": 73.5, "seatTubeAngleDeg": 73.5,
+    "headTubeLengthMm": 155, "seatTubeMm": 510, "topTubeEffectiveMm": 562, "chainstayMm": 410,
+    "wheelbaseMm": 990, "bbDropMm": 70, "standoverMm": 790, "wheelSize": "700c"
+  },
+  {
+    "id": "race-58", "brand": "Beispiel", "model": "Race", "size": "58", "discipline": "road-race",
+    "stackMm": 587, "reachMm": 398, "headTubeAngleDeg": 73.5, "seatTubeAngleDeg": 73.0,
+    "headTubeLengthMm": 178, "seatTubeMm": 530, "topTubeEffectiveMm": 578, "chainstayMm": 410,
+    "wheelbaseMm": 1000, "bbDropMm": 70, "standoverMm": 812, "wheelSize": "700c"
+  },
+  {
+    "id": "race-61", "brand": "Beispiel", "model": "Race", "size": "61", "discipline": "road-race",
+    "stackMm": 615, "reachMm": 405, "headTubeAngleDeg": 73.5, "seatTubeAngleDeg": 73.0,
+    "headTubeLengthMm": 208, "seatTubeMm": 560, "topTubeEffectiveMm": 595, "chainstayMm": 412,
+    "wheelbaseMm": 1012, "bbDropMm": 70, "standoverMm": 840, "wheelSize": "700c"
+  },
+  {
+    "id": "endurance-54", "brand": "Beispiel", "model": "Endurance", "size": "54", "discipline": "road-endurance",
+    "stackMm": 575, "reachMm": 377, "headTubeAngleDeg": 72.5, "seatTubeAngleDeg": 73.5,
+    "headTubeLengthMm": 160, "seatTubeMm": 500, "topTubeEffectiveMm": 545, "chainstayMm": 415,
+    "wheelbaseMm": 995, "bbDropMm": 75, "standoverMm": 775, "wheelSize": "700c"
+  },
+  {
+    "id": "endurance-56", "brand": "Beispiel", "model": "Endurance", "size": "56", "discipline": "road-endurance",
+    "stackMm": 595, "reachMm": 384, "headTubeAngleDeg": 73.0, "seatTubeAngleDeg": 73.5,
+    "headTubeLengthMm": 180, "seatTubeMm": 520, "topTubeEffectiveMm": 560, "chainstayMm": 415,
+    "wheelbaseMm": 1003, "bbDropMm": 75, "standoverMm": 798, "wheelSize": "700c"
+  },
+  {
+    "id": "endurance-58", "brand": "Beispiel", "model": "Endurance", "size": "58", "discipline": "road-endurance",
+    "stackMm": 617, "reachMm": 391, "headTubeAngleDeg": 73.0, "seatTubeAngleDeg": 73.0,
+    "headTubeLengthMm": 200, "seatTubeMm": 540, "topTubeEffectiveMm": 578, "chainstayMm": 415,
+    "wheelbaseMm": 1012, "bbDropMm": 75, "standoverMm": 820, "wheelSize": "700c"
+  },
+  {
+    "id": "gravel-m", "brand": "Beispiel", "model": "Gravel", "size": "M", "discipline": "gravel",
+    "stackMm": 585, "reachMm": 385, "headTubeAngleDeg": 71.5, "seatTubeAngleDeg": 73.5,
+    "headTubeLengthMm": 160, "seatTubeMm": 520, "topTubeEffectiveMm": 565, "chainstayMm": 425,
+    "wheelbaseMm": 1030, "bbDropMm": 75, "standoverMm": 800, "wheelSize": "700c"
+  },
+  {
+    "id": "gravel-l", "brand": "Beispiel", "model": "Gravel", "size": "L", "discipline": "gravel",
+    "stackMm": 608, "reachMm": 395, "headTubeAngleDeg": 71.5, "seatTubeAngleDeg": 73.0,
+    "headTubeLengthMm": 185, "seatTubeMm": 550, "topTubeEffectiveMm": 585, "chainstayMm": 425,
+    "wheelbaseMm": 1045, "bbDropMm": 75, "standoverMm": 825, "wheelSize": "700c"
+  },
+  {
+    "id": "trail-m", "brand": "Beispiel", "model": "Trail", "size": "M", "discipline": "mtb-trail",
+    "stackMm": 625, "reachMm": 455, "headTubeAngleDeg": 65.5, "seatTubeAngleDeg": 76.5,
+    "headTubeLengthMm": 110, "seatTubeMm": 420, "topTubeEffectiveMm": 605, "chainstayMm": 435,
+    "wheelbaseMm": 1205, "bbDropMm": 30, "standoverMm": 760, "wheelSize": "29"
+  },
+  {
+    "id": "trail-l", "brand": "Beispiel", "model": "Trail", "size": "L", "discipline": "mtb-trail",
+    "stackMm": 635, "reachMm": 480, "headTubeAngleDeg": 65.5, "seatTubeAngleDeg": 76.5,
+    "headTubeLengthMm": 120, "seatTubeMm": 445, "topTubeEffectiveMm": 630, "chainstayMm": 435,
+    "wheelbaseMm": 1235, "bbDropMm": 30, "standoverMm": 770, "wheelSize": "29"
+  }
+]
