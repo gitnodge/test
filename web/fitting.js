@@ -2,7 +2,7 @@
 import * as BG from './bikegeo.js';
 
 const KEY = 'bikegeo.fitting.v1';
-const DEFAULT = () => ({ step: 'prep', updatedAt: 0, tools: {}, prep: {}, base: { pains: {} }, setup: { checks: {} }, cleats: { checks: {} }, body: {}, ind: {}, wrist: {}, iter: { log: [] }, bars: { style: 'balanced', checks: {} }, err: {}, rec: {}, road: { checks: {} } });
+const DEFAULT = () => ({ step: 'prep', mode: 'real', updatedAt: 0, tools: {}, prep: {}, base: { pains: {} }, indSource: {}, fitbike: {}, setup: { checks: {} }, cleats: { checks: {} }, body: {}, ind: {}, wrist: {}, iter: { log: [] }, bars: { style: 'balanced', checks: {} }, err: {}, rec: {}, road: { checks: {} } });
 let S = DEFAULT();
 let root, db = null, saveTimer;
 
@@ -41,7 +41,8 @@ function indicatorControl(ind) {
   if (ind.input.kind === 'angle') ctl = `<input class="mono" id="${id}" data-k="${path}" data-t="number" type="number" min="${ind.input.min}" max="${ind.input.max}" step="1" value="${has(v) ? v : ''}" placeholder="°">`;
   else if (ind.input.kind === 'scale5') ctl = `<select id="${id}" data-k="${path}" data-t="number"><option value="">–</option>${[1, 2, 3, 4, 5].map((k) => `<option value="${k}" ${v === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`;
   else ctl = `<select id="${id}" data-k="${path}" data-t="string"><option value="">–</option>${ind.input.options.map((x) => `<option value="${esc(x.value)}" ${v === x.value ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select>`;
-  return `<div class="ind"><div><h4><label for="${id}">${esc(ind.title)}</label>${ind.heightOnly ? ' <span class="verdict">nur Höhe</span>' : ''}</h4><div class="how">${esc(ind.how)}</div>${ind.caveat ? `<div class="cav">${esc(ind.caveat)}</div>` : ''}</div><div class="ctl">${ctl}<span data-derived="v:${ind.id}">${verdictPill(ind)}</span></div></div>`;
+  const src = S.indSource && S.indSource[ind.id] === 'model' ? ' <span class="verdict v-model">aus Modell</span>' : '';
+  return `<div class="ind"><div><h4><label for="${id}">${esc(ind.title)}</label>${ind.heightOnly ? ' <span class="verdict">nur Höhe</span>' : ''}${src}</h4><div class="how">${esc(ind.how)}</div>${ind.caveat ? `<div class="cav">${esc(ind.caveat)}</div>` : ''}</div><div class="ctl">${ctl}<span data-derived="v:${ind.id}">${verdictPill(ind)}</span></div></div>`;
 }
 const VLABEL = { high: 'Sattel zu hoch', low: 'Sattel zu tief', inconclusive: 'unentschieden', forward: 'zu weit vorn / Nase unten', back: 'zu weit hinten / Nase oben', 'far-or-low': 'zu weit weg / zu tief', 'close-or-high': 'zu nah / zu hoch' };
 function verdictPill(ind) {
@@ -64,6 +65,8 @@ const STEPS = [
   { id: 'prep', title: 'Werkzeug & Marker', status: () => doneRatio('tools', BG.TOOLS.length), html: () => `
     <h2>Werkzeug, Marker, Belastung</h2>
     <p class="lead">Vorbereitung für ein Fitting auf der Rolle. Ohne Beobachter geht es, aber deutlich schwerer. Zwei bis drei Stunden einplanen.</p>
+    <div class="grid2">${sel('mode', [{ value: 'real', label: 'Eigenes Rad auf der Rolle' }, { value: 'virtual', label: 'Kein Rad: virtuelles Fit-Bike' }], { label: 'Ausgangslage' })}</div>
+    <div data-derived="modeNote">${D.modeNote()}</div>
     <h3>Werkzeug</h3>
     ${checks('tools', BG.TOOLS.map((t) => ({ title: t.name + (t.essential ? '' : ' (optional)'), note: t.note })))}
     <h3>Anatomische Marker</h3>
@@ -89,6 +92,7 @@ const STEPS = [
   { id: 'setup', title: 'Aufbau & Aufwärmen', status: () => doneRatio('setup.checks', 6), html: () => `
     <h2>Aufbau und Aufwärmen</h2>
     <p class="lead">${esc(BG.PROTOCOL.find((s) => s.id === 'setup').summary)}</p>
+    ${virtualNote('setup')}
     ${checks('setup.checks', BG.PROTOCOL.find((s) => s.id === 'setup').items)}
     <div data-derived="effort">${D.effort()}</div>
     ${callout('', '<b>Neutrale Sitzposition.</b> Ein zu hoher Sattel kippt nach vorn aus der neutralen Position, ein zu langer Reach zieht nach vorn. Beim Bewerten dort sitzen, wo der Sattel einen hinsetzt.')}` },
@@ -96,6 +100,7 @@ const STEPS = [
   { id: 'cleats', title: 'Cleats', status: () => doneRatio('cleats.checks', 3), html: () => `
     <h2>Cleats</h2>
     <p class="lead">Zuerst, weil die Cleatposition direkt an der Sattelhöhe hängt. Fußanatomie, Einlagen, Keile und Shims sind ein eigenes Thema und hier nicht abgedeckt.</p>
+    ${virtualNote('cleats')}
     ${checks('cleats.checks', BG.CLEAT_RULES.map((r) => ({ title: r.axis, note: r.rule })))}
     <h3>Cleats nach hinten: Wirkung auf die Sattelhöhe</h3>
     <div class="grid3">${inp('cleats.shiftBack', { label: 'Cleats nach hinten', unit: 'mm', min: 0, max: 20 })}</div>
@@ -121,6 +126,7 @@ const STEPS = [
   { id: 'ind-h', title: 'Indikatoren Sattelhöhe', status: () => BG.tallySaddleHeight(S.ind).answered / 10, html: () => `
     <h2>Indikatoren Sattelhöhe</h2>
     <p class="lead">Zehn Beobachtungen plus die Vorhersage aus den Beinmaßen. Keine ist für sich entscheidend, manche widersprechen sich. Zusammen ergeben sie eine Richtung.</p>
+    ${virtualNote('ind-h')}
     <div>${BG.SADDLE_HEIGHT_INDICATORS.map(indicatorControl).join('')}</div>
     <h3>Bilanz</h3>
     <div data-derived="tallyH">${D.tallyH()}</div>` },
@@ -128,6 +134,7 @@ const STEPS = [
   { id: 'ind-fa', title: 'Indikatoren vor/zurück', status: () => BG.tallyForeAft(S.ind).answered / 4, html: () => `
     <h2>Indikatoren Sattel vor/zurück</h2>
     <p class="lead">Erst bewerten, wenn die Höhe ungefähr stimmt. Im Zweifel zählt die Hüftmarke.</p>
+    ${virtualNote('ind-fa')}
     <div>${BG.FORE_AFT_INDICATORS.map(indicatorControl).join('')}</div>
     <h3>Bilanz</h3>
     <div data-derived="tallyFA">${D.tallyFA()}</div>` },
@@ -137,6 +144,7 @@ const STEPS = [
     return `
     <h2>Indikatoren Lenker</h2>
     <p class="lead">Die ersten vier sagen etwas über Höhe und Reach (Nähe der Hände zu den Hoods), die letzten drei nur über die Höhe (Unterlenker). Die Hoods-Position ist ein kleines Ziel mit unter 10 mm Toleranz.</p>
+    ${virtualNote('ind-bar')}
     <div>${BG.HANDLEBAR_INDICATORS.map(indicatorControl).join('')}</div>
     <h3>Handgelenke und Hebel</h3>
     ${checks('wrist', BG.WRIST_CHECKS.map((w) => w.title))}
@@ -146,6 +154,7 @@ const STEPS = [
   { id: 'iter', title: 'Sattel einstellen', status: () => (S.iter.log.length ? (S.iter.done ? 1 : 0.5) : 0), html: () => `
     <h2>Sattel einstellen: grob, vor/zurück, fein</h2>
     <p class="lead">Änderungen schnell durchführen, damit der Vergleich frisch ist. Einzige Frage nach jeder Änderung: leichter oder schwerer, das Bewertungstempo zu halten? Nicht „wollen“, dass es besser ist.</p>
+    ${virtualNote('iter')}
     <div data-derived="iterStart">${D.iterStart()}</div>
     <h3>Grobabstimmung: Protokoll</h3>
     <div class="grid3">
@@ -170,6 +179,7 @@ const STEPS = [
   { id: 'bars', title: 'Lenker einstellen', status: () => doneRatio('bars.checks', 6), html: () => `
     <h2>Lenker einstellen</h2>
     <p class="lead">Der Sattel ist fertig und bleibt unangetastet. Erst Schalthebel, dann Hoods-Position über Vorbaulänge und Höhe, dann Unterlenker.</p>
+    ${virtualNote('bars')}
     ${sel('bars.style', [{ value: 'race', label: 'Sportlich (Torso ~40 … 44°)' }, { value: 'balanced', label: 'Ausgewogen (~45°)' }, { value: 'comfort', label: 'Komfort (45 … 50°)' }], { label: 'Fahrstil' })}
     <div data-derived="barsTarget">${D.barsTarget()}</div>
     ${checks('bars.checks', BG.PROTOCOL.find((s) => s.id === 'bars').items)}
@@ -192,6 +202,7 @@ const STEPS = [
   { id: 'record', title: 'Aufzeichnung', status: () => (8 - BG.RECORD_FIELDS.filter((f) => !has(S.rec[f.key])).length) / 8, html: () => `
     <h2>Aufzeichnung und Übertragung</h2>
     <p class="lead">Die Position festhalten. Sternmaße sind auf andere Räder übertragbar, gelten aber für diesen Sattel; ein anderer Sattel ist ein Startpunkt mit Feinabstimmung.</p>
+    ${virtualNote('record')}
     <div class="grid3">${BG.RECORD_FIELDS.map((f) => inp('rec.' + f.key, { label: `${f.code}${f.transferable ? '*' : ''} ${f.title}`, unit: 'mm · ' + f.how, min: 0, max: 1200 })).join('')}</div>
     <div data-derived="record">${D.record()}</div>
     <h3>Auf andere Rahmen übertragen</h3>
@@ -213,7 +224,24 @@ const STEPS = [
 ];
 
 // ---------- Abgeleitete Blöcke ----------
+const VIRTUAL_NOTE = { real: '', 
+  setup: 'Ohne Rad entfällt der Aufbau auf der Rolle. Die Belastungsziele gelten später für die Kontrolle auf dem gekauften Rad.',
+  cleats: 'Ohne Rad lassen sich Cleats nur vorbereiten: Regeln lesen, Fußstellung beobachten. Die Einstellung passiert am ersten Rad.',
+  'ind-h': 'Kein Rad: Kniewinkel, KOPS, Torso- und Hüftwinkel kommen aus dem Fit-Bike-Modell (Ansicht „Fit-Bike“, Schaltfläche „Ins Fitting übernehmen“). Beobachtungen wie Hüftstabilität oder Kniemarke gibt es ohne Rad nicht – offen lassen.',
+  'ind-fa': 'Kein Rad: KOPS kommt aus dem Modell. Balance und Handgewicht sind ohne Rad nicht bewertbar.',
+  'ind-bar': 'Kein Rad: Torsowinkel, Oberarm–Rumpf und Ellbogen kommen aus dem Modell. Leistung Hoods/Unterlenker und Zeit im Unterlenker bleiben Erfahrungswerte.',
+  iter: 'Kein Rad: Die Iteration läuft am Modell. Sattelhöhe in der Fit-Bike-Ansicht verstellen, Winkel beobachten, hier protokollieren. Pad-Test und Leistungsvergleich sind erst auf dem echten Rad möglich; deshalb ist das Ergebnis eine Startposition, kein Sweet Spot.',
+  bars: 'Kein Rad: „Lenker optimieren“ in der Fit-Bike-Ansicht setzt die Lenkerposition auf Torso- und Oberarmwinkel-Ziel. Die Feinabstimmung mit Leistungsvergleich folgt auf dem echten Rad.',
+  record: 'Kein Rad: Die Aufzeichnung wird aus dem Fit-Bike-Aufbau gefüllt (A, C, E, F, G, H). B und D gibt es ohne Rahmen nicht.',
+};
+function virtualNote(stepId) { return S.mode === 'virtual' && VIRTUAL_NOTE[stepId] ? callout('', '<b>Kein Rad.</b> ' + esc(VIRTUAL_NOTE[stepId].replace(/^Kein Rad: /, ''))) : ''; }
+
 const D = {
+  modeNote() {
+    return S.mode === 'virtual'
+      ? callout('', '<b>Virtuelles Fit-Bike.</b> Der Kunde hat kein Rad. Sattel und Lenker werden am Modell frei positioniert, ein Körpermodell liefert die Gelenkwinkel, und das Ergebnis ist ein Satz Koordinaten (Sattelhöhe, Setback, Lenker X/Y, Kurbel), aus dem der Rahmen gesucht wird. Die Beobachtungen des Protokolls, die einen Beobachter brauchen, entfallen; die Schwellwerte werden gegen das Modell geprüft. Das ergibt eine belastbare Startposition, kein fertiges Fitting: Die Feinabstimmung (Pad-Test, Leistungsvergleich) passiert auf dem echten Rad.')
+      : '<p class="save">Eigenes Rad: Das Protokoll läuft vollständig mit Beobachtung auf der Rolle.</p>';
+  },
   effort() {
     const t = BG.effortTargets({ maxHrBpm: S.prep.maxHr, ftpW: S.prep.ftp });
     return `<table class="t"><tr><th>Phase</th><th>Tempo</th><th>Belastung</th></tr>
@@ -365,7 +393,7 @@ async function initDb() {
   if (!db) return;
   try {
     const snap = await db.doc('fittings/current').get();
-    if (snap.exists) { const d = snap.data(); if (d && (d.updatedAt || 0) > (S.updatedAt || 0)) { S = merge(DEFAULT(), d); renderStep(); renderNav(); } }
+    if (snap.exists) { const d = snap.data(); if (d && (d.updatedAt || 0) > (S.updatedAt || 0)) { S = merge(DEFAULT(), d); renderStep(); renderNav(); store.onLoaded.forEach((f) => f()); } }
     status('Datenbank verbunden');
   } catch { /* lokal weiter */ }
 }
@@ -383,6 +411,7 @@ function onInput(e) {
   else if (t === 'number') v = el.value === '' ? undefined : Number(el.value);
   else v = el.value === '' ? undefined : el.value;
   set(el.dataset.k, v);
+  if (el.dataset.k.startsWith('ind.') && S.indSource) delete S.indSource[el.dataset.k.slice(4)];
   if (el.dataset.k === 'base.dropsTime' && has(v)) set('ind.drops-time', v);
   save();
   renderDerived();
@@ -402,6 +431,14 @@ function onClick(e) {
   else if (act === 'import') { try { const d = JSON.parse(root.querySelector('#export').value); S = merge(DEFAULT(), d); save(); renderStep(); renderNav(); } catch { status('Ungültiges JSON'); } }
   else if (act === 'reset') { if (confirm('Alle Fitting-Eingaben löschen?')) { S = DEFAULT(); save(); renderStep(); renderNav(); } }
 }
+
+/** Zugriff für andere Module (Fit-Bike-Ansicht): Zustand lesen, speichern, neu zeichnen. */
+export const store = {
+  get: () => S,
+  save: () => save(),
+  rerender: () => { if (root) { renderStep(); renderNav(); } },
+  onLoaded: [],
+};
 
 export function mountFitting(el) {
   root = el;

@@ -117,6 +117,20 @@ svg{width:100%;height:auto;max-height:520px;display:block;max-width:100%}
 .verdict{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:3px 7px;border-radius:2px;background:var(--bg);color:var(--muted)}
 .v-high,.v-forward,.v-far-or-low,.v-low{background:var(--warn-soft);color:var(--warn)}
 .v-inconclusive{background:var(--bg);color:var(--muted)}
+.v-model{background:var(--accent-soft);color:var(--accent)}
+.v-ok{background:var(--ok-soft);color:var(--ok)}
+.readout{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;align-items:center;font-size:13px}
+.readout .k{color:var(--muted)}
+.readout .v{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.readout .th{font-size:11px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.ctrl{display:grid;gap:10px}
+.ctrl .f{grid-template-columns:1fr auto;grid-template-areas:'l v' 'r r' 'u u';align-items:baseline}
+.ctrl .f label{grid-area:l}
+.ctrl .f output{grid-area:v;font-family:"JetBrains Mono",monospace;font-size:13px}
+.ctrl .f input[type=range]{grid-area:r}
+.ctrl .f small{grid-area:u}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
 .tally{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:520px}
 .tally div{border:1px solid var(--line);padding:8px 10px;text-align:center}
 .tally b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:28px;line-height:1}
@@ -148,11 +162,13 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
   <nav class="views" aria-label="Ansicht">
     <a href="#rahmen" data-view="rahmen" class="on">Rahmen</a>
     <a href="#fitting" data-view="fitting">Fitting</a>
+    <a href="#fitbike" data-view="fitbike">Fit-Bike</a>
   </nav>
   <p id="viewlead">Welcher Rahmen passt zu welcher Person. Faustregel-Modell, keine Fitting-Messung. Rahmendaten sind Beispielwerte.</p>
 </header>
 
 <div id="view-fitting" class="fitting" hidden></div>
+<div id="view-fitbike" class="wrap" hidden></div>
 
 <div id="view-rahmen" class="wrap">
   <section class="panel">
@@ -360,15 +376,19 @@ render();
 </script>
 <script type="module">
 import { mountFitting } from './fitting.js';
-const leads = { rahmen: 'Welcher Rahmen passt zu welcher Person. Faustregel-Modell, keine Fitting-Messung. Rahmendaten sind Beispielwerte.', fitting: 'Dynamisches Bikefitting auf der Rolle, Schritt für Schritt: Cleats, Kurbel, Sattelhöhe, Sattel vor/zurück, Lenker, Aufzeichnung. Eingaben werden gespeichert.' };
+import { mountFitBike } from './fitbike.js';
+const leads = { rahmen: 'Welcher Rahmen passt zu welcher Person. Faustregel-Modell, keine Fitting-Messung. Rahmendaten sind Beispielwerte.', fitting: 'Dynamisches Bikefitting auf der Rolle, Schritt für Schritt: Cleats, Kurbel, Sattelhöhe, Sattel vor/zurück, Lenker, Aufzeichnung. Eingaben werden gespeichert.', fitbike: 'Virtuelles Fit-Bike für Kunden ohne Rad: Sattel und Lenker frei positionieren, Körpermodell rechnet die Gelenkwinkel, Ergebnis sind Koordinaten für die Rahmensuche.' };
 function showView(v){
   document.getElementById('view-rahmen').hidden = v !== 'rahmen';
   document.getElementById('view-fitting').hidden = v !== 'fitting';
+  document.getElementById('view-fitbike').hidden = v !== 'fitbike';
+  if (v === 'fitbike') window.dispatchEvent(new Event('fitbike:show'));
   document.querySelectorAll('.views a').forEach(a => a.classList.toggle('on', a.dataset.view === v));
   document.getElementById('viewlead').textContent = leads[v];
 }
 document.querySelectorAll('.views a').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); history.replaceState(null, '', '#' + a.dataset.view); showView(a.dataset.view); }));
-const initial = location.hash === '#fitting' ? 'fitting' : 'rahmen';
-showView(initial);
+const initial = location.hash === '#fitting' ? 'fitting' : location.hash === '#fitbike' ? 'fitbike' : 'rahmen';
 mountFitting(document.getElementById('view-fitting'));
+mountFitBike(document.getElementById('view-fitbike'));
+showView(initial);
 </script>

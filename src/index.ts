@@ -5,3 +5,4 @@ export { barPosition, findBestCockpit } from './cockpit.js';
 export { completeMeasurements } from './anthropometry.js';
 export { DISCIPLINE_DEFAULTS, SADDLE_HEIGHT_FACTOR } from './constants.js';
 export * from './fitting/index.js';
+export * from './fitbike.js';

@@ -8,4 +8,5 @@ const frames = readFileSync('src/data/frames.example.json', 'utf8');
 const html = readFileSync('web/index.html', 'utf8').replace('/*__FRAMES__*/[]', frames.trim());
 writeFileSync('web/dist/index.html', html);
 copyFileSync('web/fitting.js', 'web/dist/fitting.js');
+copyFileSync('web/fitbike.js', 'web/dist/fitbike.js');
 console.log('web/dist gebaut');

@@ -11,6 +11,11 @@ Zweiter Teil ist ein Bikefitting-Protokoll: das dynamische Fitting auf der Rolle
 vor/zurück und Lenker, Iteration, Fehlerbilder, Aufzeichnung, Straßentest), mit Bewertung der Eingaben
 gegen die Schwellwerte der Methodik.
 
+Dritter Teil ist ein virtuelles Fit-Bike für Kunden ohne eigenes Rad, nach dem Prinzip verstellbarer
+Fitting-Räder (Retül Müve, Shimano): Sattel und Lenker frei im Raum, ein 2D-Körpermodell rechnet die
+Gelenkwinkel über den Kurbelumlauf und prüft sie gegen das Protokoll. Ergebnis sind Koordinaten
+(Sattelhöhe, Setback, Lenker HX/HY, Kurbel), aus denen der Rahmen gesucht wird.
+
 ## Status
 
 Kernlogik als TypeScript-Bibliothek plus Web-Oberfläche ohne Backend. Keine Rahmendatenbank: Die
@@ -25,8 +30,9 @@ npm run demo      # Rangliste für eine Beispielperson (1,78 m, 84 cm Schrittlä
 npm run build:web # Web-Oberfläche nach web/dist (statisch, im Browser öffnen oder als Artifact veröffentlichen)
 ```
 
-Die Oberfläche hat zwei Ansichten: **Rahmen** (Matching mit maßstäblicher Zeichnung von Rahmen und
-Fahrer) und **Fitting** (das Protokoll). Fitting-Eingaben werden im Browser gespeichert und, wenn die
+Die Oberfläche hat drei Ansichten: **Rahmen** (Matching mit maßstäblicher Zeichnung von Rahmen und
+Fahrer), **Fitting** (das Protokoll, mit Modus „eigenes Rad“ oder „kein Rad“) und **Fit-Bike** (das
+virtuelle Fitting-Rad). Fitting-Eingaben werden im Browser gespeichert und, wenn die
 Seite als Artifact mit Datenbank läuft, zusätzlich dort.
 
 ## Wie das Matching funktioniert
@@ -65,6 +71,21 @@ eigener Formulierung, die Schwellwerte, Formeln und Tabellen als Fakten. Module 
 | `record.ts` | Aufzeichnung A … H mit Übertragbarkeit; Umrechnung in Zielpositionen fürs Rahmen-Matching |
 | `protocol.ts` | Werkzeugliste, Marker, Cleat-Regeln, Ablaufschritte, Straßen-Checkliste, Kernaussagen |
 
+## Virtuelles Fit-Bike
+
+`src/fitbike.ts`. Aufbau: Kurbellänge, Sattelhöhe (A), Setback (G), Lenkerklemmung HX/HY, Lenkertyp,
+Lenkerbreite. Körpermodell aus Körpergröße, Schrittlänge, Trochanterhöhe, Rumpf, Arm (fehlende Segmente
+werden geschätzt und gekennzeichnet). Berechnet werden Knie max/min, Hüfte min, Torsowinkel, Oberarm–Rumpf,
+Ellbogen, KOPS und die Sprunggelenkwinkel; alle außer Sprunggelenk werden als Protokoll-Indikatoren
+übernommen. Funktionen: Startaufbau (Vorhersage + Faustregel), Sattel auf Kniewinkel 141°, Lenker mit
+minimaler Bewegung in den Winkelbereich, Übergabe in Aufzeichnung und Rahmen-Matching.
+
+Kalibrierung: Hüftgelenk 30 mm vor und 40 mm über der Sitzposition; Fußhebel 0,085 × Körpergröße,
+Fußneigung 30° oben bis 46° unten; Rumpf 0,26 × Körpergröße bis zur Schultermarke; Ellbogen 160°. Diese
+Werte sind so gewählt, dass die Vorhersage-Sattelhöhe und die Faustregel-Lenkerposition, die zu realen
+Rädern passt, in der Mitte der Protokollbereiche landen. Sie sind eine Kalibrierung an einer Person, keine
+Messung.
+
 ## Was noch nicht stimmt
 
 Das ist die ehrliche Liste, nicht die Marketingversion.
@@ -93,6 +114,12 @@ Das ist die ehrliche Liste, nicht die Marketingversion.
 - **Die Bilanzen sind grobe Mehrheitsentscheide.** Zwei Stimmen Vorsprung entscheiden. Die Methodik
   selbst sagt, dass die Indikatoren mehrdeutig und teils widersprüchlich sind; die App macht daraus keine
   Präzision, die nicht da ist.
+- **Das Fit-Bike-Modell ist ein Modell.** 2D, starre Segmente, angenommene Fußhaltung, angenommene
+  Ellbogenbeugung, keine Beckenkippung, keine Weichteilverformung. Ein echtes Fit-Bike mit Bewegungserfassung
+  misst die Person; das Modell rechnet eine Durchschnittsperson mit den eingegebenen Längen. Die Winkel
+  reagieren empfindlich auf die Annahmen: 5° Fußneigung verschieben den Kniewinkel um etwa 3°, 5° Torsowinkel
+  die Lenkerhöhe um rund 70 mm. Das Ergebnis ist eine belastbare Startposition für die Rahmenwahl, kein
+  fertiges Fitting; Pad-Test und Leistungsvergleich passieren auf dem echten Rad.
 - **Web-Oberfläche ohne Backend.** Speicherung im Browser des Geräts, optional in der Artifact-Datenbank.
   Kein Export außer Kopieren des JSON.
 
@@ -115,11 +142,13 @@ src/
   fit.ts           Person → Zielpositionen
   match.ts         Rahmen bewerten und ranken
   fitting/         Bikefitting-Protokoll (Rechner, Indikatoren, Iteration, Fehlerbilder, Aufzeichnung)
+  fitbike.ts       Virtuelles Fit-Bike: Körpermodell, Gelenkwinkel, Optimierer, Übergabe
   data/            Beispielrahmen (erfundene Werte)
   demo.ts          Konsolen-Demo
 web/
   index.html       Oberfläche: Rahmen-Matching mit Zeichnung, Ansichtswechsel
   fitting.js       Oberfläche: Fitting-Protokoll
+  fitbike.js       Oberfläche: virtuelles Fit-Bike
 scripts/build-web.mjs  Bündelt die Bibliothek und baut web/dist
 test/              Vitest-Tests
 ```
